@@ -6,140 +6,128 @@
 <title>KGirl Guessr 🎤</title>
 <style>
   :root {
-    --pink: #D4537E; --pink-light: #fbeaf0; --pink-dark: #72243E;
-    --green: #639922; --green-light: #eaf3de; --green-dark: #3B6D11;
-    --amber: #BA7517; --amber-light: #faeeda;
-    --gray: #888780; --gray-light: #F1EFE8; --gray-dark: #444441;
-    --bg: #fff; --bg2: #f8f7f4; --bg3: #f1efe8;
-    --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
-    --border: rgba(0,0,0,0.1); --radius: 10px; --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    --pink:#D4537E;--pink-light:#fbeaf0;--pink-dark:#72243E;
+    --green:#639922;--green-light:#eaf3de;--green-dark:#3B6D11;
+    --amber:#BA7517;--amber-light:#faeeda;--amber-dark:#633806;
+    --red:#E24B4A;--red-light:#fcebeb;--red-dark:#791F1F;
+    --bg:#fff;--bg2:#f8f7f4;--bg3:#f1efe8;
+    --text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+    --border:rgba(0,0,0,0.1);--radius:10px;--radius-sm:6px;
+    --shadow:0 1px 3px rgba(0,0,0,0.07);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a1917; --bg2: #222220; --bg3: #2c2c2a;
-      --text: #f0ede8; --text2: #b4b2a9; --text3: #888780;
-      --border: rgba(255,255,255,0.1);
-      --pink-light: #2d1820; --green-light: #1a2610; --amber-light: #2a1e08;
-      --gray-light: #2c2c2a;
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
-
-  /* ── Layout ── */
-  #app { max-width: 760px; margin: 0 auto; padding: 0 1rem 4rem; }
-  .header { text-align: center; padding: 2rem 0 1.5rem; }
-  .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
-  .header h1 span { color: var(--pink); }
-  .header p { color: var(--text2); font-size: 0.95rem; margin-top: 4px; }
-
-  /* ── Cards ── */
-  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
-
-  /* ── Buttons ── */
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 0.9rem; cursor: pointer; transition: background 0.12s, transform 0.08s; font-weight: 500; }
-  .btn:hover { background: var(--bg3); }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-pink { background: var(--pink); color: #fff; border-color: var(--pink-dark); }
-  .btn-pink:hover { background: var(--pink-dark); }
-  .btn-green { background: var(--green); color: #fff; border-color: var(--green-dark); }
-  .btn-green:hover { background: var(--green-dark); }
-
-  /* ── Inputs ── */
-  input[type=text] { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none; }
-  input[type=text]:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(212,83,126,0.15); }
-
-  /* ── Screen management ── */
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* ── Home screen ── */
-  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
-  .mode-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-align: center; }
-  .mode-card:hover { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(212,83,126,0.1); }
-  .mode-card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-  .mode-card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
-  .mode-card p { font-size: 0.85rem; color: var(--text2); }
-
-  /* ── Lobby / Multi ── */
-  .room-code { font-size: 2.5rem; font-weight: 700; letter-spacing: 6px; color: var(--pink); text-align: center; padding: 1rem; background: var(--pink-light); border-radius: var(--radius-sm); margin: 1rem 0; }
-  .player-list { display: flex; flex-direction: column; gap: 8px; margin: 1rem 0; }
-  .player-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg2); border-radius: var(--radius-sm); }
-  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; }
-  .crown { font-size: 0.75rem; }
-  .badge { padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 500; background: var(--pink-light); color: var(--pink-dark); }
-
-  /* ── Game ── */
-  .game-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
-  .round-badge { font-size: 0.8rem; color: var(--text2); background: var(--bg2); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
-  .timer-bar-wrap { width: 100%; height: 6px; background: var(--bg3); border-radius: 3px; margin-bottom: 1rem; overflow: hidden; }
-  .timer-bar { height: 100%; background: var(--pink); border-radius: 3px; transition: width 1s linear, background 0.3s; }
-
-  /* search */
-  .search-wrap { position: relative; margin-bottom: 1rem; }
-  #search-input { padding-right: 48px; }
-  .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text3); font-size: 1.1rem; cursor: pointer; display: none; }
-  .dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 20; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .dd-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; font-size: 0.9rem; }
-  .dd-item:hover { background: var(--bg2); }
-  .dd-group { font-size: 0.78rem; color: var(--text2); margin-left: auto; }
-
-  /* table */
-  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
-  .leg { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text2); }
-  .leg-dot { width: 12px; height: 12px; border-radius: 3px; }
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: separate; border-spacing: 0 5px; min-width: 580px; }
-  th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); font-weight: 600; padding: 4px 8px; text-align: center; }
-  th:first-child { text-align: left; }
-  .grow td { padding: 9px 8px; text-align: center; font-size: 0.82rem; font-weight: 600; animation: rowIn 0.3s ease; }
-  .grow td:first-child { text-align: left; padding-left: 12px; border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
-  .grow td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-  @keyframes rowIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-  .c-correct { background: var(--green); color: #fff; }
-  .c-wrong { background: var(--gray); color: #fff; }
-  .c-name-cell { display: flex; align-items: center; gap: 8px; }
-  .hint-up::after { content: " ↑"; }
-  .hint-down::after { content: " ↓"; }
-
-  /* found banner */
-  .found-banner { display: none; background: var(--green-light); border: 1px solid var(--green); color: var(--green-dark); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; }
-
-  /* ── Results ── */
-  .leaderboard { display: flex; flex-direction: column; gap: 8px; margin: 1rem 0; }
-  .lb-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg2); border-radius: var(--radius-sm); }
-  .lb-rank { font-size: 1.1rem; font-weight: 700; min-width: 28px; color: var(--text2); }
-  .lb-rank.gold { color: #f0a800; }
-  .lb-rank.silver { color: #9e9e9e; }
-  .lb-rank.bronze { color: #cd7c32; }
-  .lb-score { margin-left: auto; font-weight: 600; color: var(--green); }
-  .lb-delta { font-size: 0.78rem; color: var(--text3); margin-left: 4px; }
-
-  /* ── Answer reveal ── */
-  .answer-card { background: var(--pink-light); border: 1px solid var(--pink); border-radius: var(--radius); padding: 1.25rem; text-align: center; margin-bottom: 1rem; }
-  .answer-card h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--pink-dark); margin-bottom: 6px; }
-  .answer-card .answer-name { font-size: 1.8rem; font-weight: 700; color: var(--pink-dark); }
-  .answer-card .answer-group { font-size: 1rem; color: var(--pink); margin-top: 2px; }
-
-  /* ── Notification toast ── */
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--gray-dark); color: #fff; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 0.9rem; transition: transform 0.3s; pointer-events: none; z-index: 100; }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ── Misc ── */
-  .flex { display: flex; align-items: center; gap: 10px; }
-  .flex-col { display: flex; flex-direction: column; gap: 10px; }
-  .section-title { font-size: 0.85rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
-  .solo-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 1rem; }
-  .stat-box { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
-  .stat-box .num { font-size: 1.5rem; font-weight: 700; }
-  .stat-box .lbl { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
-
-  /* connection dot */
-  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); display: inline-block; }
-  .conn-dot.ok { background: var(--green); }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#1a1917;--bg2:#222220;--bg3:#2c2c2a;
+    --text:#f0ede8;--text2:#b4b2a9;--text3:#888780;
+    --border:rgba(255,255,255,0.1);
+    --pink-light:#2d1820;--green-light:#1a2610;--amber-light:#2a1e08;--red-light:#2a1010;
+  }}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+  #app{max-width:900px;margin:0 auto;padding:0 1rem 4rem}
+  .header{text-align:center;padding:2rem 0 1.5rem}
+  .header h1{font-size:2rem;font-weight:700;letter-spacing:-0.5px}
+  .header h1 span{color:var(--pink)}
+  .header p{color:var(--text2);font-size:0.95rem;margin-top:4px}
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:0.9rem;cursor:pointer;transition:background 0.12s,transform 0.08s;font-weight:500}
+  .btn:hover{background:var(--bg3)}
+  .btn:active{transform:scale(0.98)}
+  .btn:disabled{opacity:0.4;cursor:not-allowed}
+  .btn-pink{background:var(--pink);color:#fff;border-color:var(--pink-dark)}
+  .btn-pink:hover{background:var(--pink-dark)}
+  .btn-green{background:var(--green);color:#fff;border-color:var(--green-dark)}
+  .btn-green:hover{background:var(--green-dark)}
+  input[type=text]{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:0.95rem;outline:none}
+  input[type=text]:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(212,83,126,0.15)}
+  .screen{display:none}
+  .screen.active{display:block}
+  /* Home */
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem}
+  .mode-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;text-align:center}
+  .mode-card:hover{border-color:var(--pink);box-shadow:0 0 0 3px rgba(212,83,126,0.1)}
+  .mode-card .icon{font-size:2.5rem;margin-bottom:0.75rem}
+  .mode-card h2{font-size:1.1rem;font-weight:600;margin-bottom:4px}
+  .mode-card p{font-size:0.85rem;color:var(--text2)}
+  /* Lobby */
+  .room-code{font-size:2.5rem;font-weight:700;letter-spacing:6px;color:var(--pink);text-align:center;padding:1rem;background:var(--pink-light);border-radius:var(--radius-sm);margin:1rem 0}
+  .player-list{display:flex;flex-direction:column;gap:8px;margin:1rem 0}
+  .player-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:var(--radius-sm)}
+  .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0}
+  .badge{padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:500;background:var(--pink-light);color:var(--pink-dark)}
+  /* Game header */
+  .game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+  .round-badge{font-size:0.8rem;color:var(--text2);background:var(--bg2);padding:4px 12px;border-radius:20px;border:1px solid var(--border)}
+  /* Timer */
+  .timer-bar-wrap{width:100%;height:6px;background:var(--bg3);border-radius:3px;margin-bottom:1rem;overflow:hidden}
+  .timer-bar{height:100%;background:var(--pink);border-radius:3px;transition:width 0.5s linear,background 0.3s}
+  /* Search */
+  .search-wrap{position:relative;margin-bottom:1rem}
+  .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;display:none}
+  .dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:20;max-height:240px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+  .dd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:0.9rem}
+  .dd-item:hover{background:var(--bg2)}
+  .dd-group{font-size:0.78rem;color:var(--text2);margin-left:auto}
+  /* Table */
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+  .leg{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text2)}
+  .leg-dot{width:12px;height:12px;border-radius:3px}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0 5px;min-width:700px}
+  th{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);font-weight:600;padding:4px 6px;text-align:center}
+  th:first-child{text-align:left}
+  .grow td{padding:8px 6px;text-align:center;font-size:0.78rem;font-weight:600;animation:rowIn 0.3s ease}
+  .grow td:first-child{text-align:left;padding-left:10px;border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+  .grow td:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+  @keyframes rowIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .c-correct{background:var(--green);color:#fff}
+  .c-partial{background:var(--amber);color:#fff}
+  .c-wrong{background:var(--red);color:#fff}
+  .c-name-cell{display:flex;align-items:center;gap:8px}
+  .hint-up::after{content:" ↑"}
+  .hint-down::after{content:" ↓"}
+  .roles-matching{font-size:0.68rem;opacity:0.9;display:block;font-weight:400;margin-top:2px}
+  /* Found banner */
+  .found-banner{display:none;background:var(--green-light);border:1px solid var(--green);color:var(--green-dark);border-radius:var(--radius-sm);padding:10px 14px;font-size:0.9rem;font-weight:500;margin-bottom:1rem}
+  /* Leaderboard */
+  .leaderboard{display:flex;flex-direction:column;gap:8px;margin:1rem 0}
+  .lb-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border-radius:var(--radius-sm)}
+  .lb-rank{font-size:1.1rem;font-weight:700;min-width:28px;color:var(--text2)}
+  .lb-rank.gold{color:#f0a800}
+  .lb-rank.silver{color:#9e9e9e}
+  .lb-rank.bronze{color:#cd7c32}
+  .lb-score{margin-left:auto;font-weight:600;color:var(--green)}
+  .lb-delta{font-size:0.78rem;color:var(--text3);margin-left:4px}
+  /* Answer reveal */
+  .answer-card{background:var(--pink-light);border:1px solid var(--pink);border-radius:var(--radius);padding:1.25rem;text-align:center;margin-bottom:1rem}
+  .answer-card h3{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--pink-dark);margin-bottom:6px}
+  .answer-card .answer-name{font-size:1.8rem;font-weight:700;color:var(--pink-dark)}
+  .answer-card .answer-group{font-size:1rem;color:var(--pink);margin-top:2px}
+  /* Multi game layout */
+  .mg-layout{display:grid;grid-template-columns:1fr 280px;gap:1rem;align-items:start}
+  @media(max-width:640px){.mg-layout{grid-template-columns:1fr}}
+  /* Toast */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1917;color:#fff;padding:10px 20px;border-radius:var(--radius-sm);font-size:0.9rem;transition:transform 0.3s;pointer-events:none;z-index:100}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  /* Misc */
+  .flex{display:flex;align-items:center;gap:10px}
+  .flex-col{display:flex;flex-direction:column;gap:10px}
+  .section-title{font-size:0.85rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+  .divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+  .solo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:1rem}
+  .stat-box{background:var(--bg2);border-radius:var(--radius-sm);padding:12px;text-align:center}
+  .stat-box .num{font-size:1.5rem;font-weight:700}
+  .stat-box .lbl{font-size:0.75rem;color:var(--text2);margin-top:2px}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block}
+  .conn-dot.ok{background:var(--green)}
+  /* Guess counter bar */
+  .guess-bar{display:flex;gap:4px;margin-bottom:1rem}
+  .guess-pip{width:20px;height:8px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);transition:background 0.2s}
+  .guess-pip.used{background:var(--pink)}
+  .guess-pip.correct{background:var(--green)}
+  /* Multi player found indicators */
+  .found-indicators{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+  .found-pill{padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:500;background:var(--bg2);color:var(--text2);border:1px solid var(--border);transition:all 0.2s}
+  .found-pill.found{background:var(--green-light);color:var(--green-dark);border-color:var(--green)}
 </style>
 </head>
 <body>
@@ -149,7 +137,7 @@
     <p>Devine l'idole de girl group kpop</p>
   </div>
 
-  <!-- ═══════════════ HOME ═══════════════ -->
+  <!-- HOME -->
   <div id="screen-home" class="screen active">
     <div class="mode-grid">
       <div class="mode-card" onclick="goSolo()">
@@ -160,12 +148,12 @@
       <div class="mode-card" onclick="goMultiHome()">
         <div class="icon">🎮</div>
         <h2>Multijoueur</h2>
-        <p>Crée ou rejoins un salon avec tes potes</p>
+        <p>Salon avec tes potes — timer de 10s par guess</p>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ MULTI HOME ═══════════════ -->
+  <!-- MULTI HOME -->
   <div id="screen-multi-home" class="screen">
     <div class="card" style="margin-bottom:1rem">
       <p class="section-title">Créer un salon</p>
@@ -187,7 +175,7 @@
     <button class="btn" onclick="show('home')">← Retour</button>
   </div>
 
-  <!-- ═══════════════ LOBBY ═══════════════ -->
+  <!-- LOBBY -->
   <div id="screen-lobby" class="screen">
     <div class="card">
       <div class="flex" style="margin-bottom:1rem">
@@ -206,16 +194,18 @@
     </div>
   </div>
 
-  <!-- ═══════════════ SOLO GAME ═══════════════ -->
+  <!-- SOLO -->
   <div id="screen-solo" class="screen">
     <div class="card">
       <div class="game-header">
         <span class="round-badge" id="solo-attempt">Essai 1</span>
-        <button class="btn" onclick="newSoloGame()" style="padding:6px 14px;font-size:0.82rem">Nouvelle partie ↺</button>
-        <button class="btn" style="padding:6px 14px;font-size:0.82rem" onclick="show('home')">← Menu</button>
+        <div class="flex" style="gap:8px">
+          <button class="btn" style="padding:6px 14px;font-size:0.82rem" onclick="newSoloGame()">Nouvelle partie ↺</button>
+          <button class="btn" style="padding:6px 14px;font-size:0.82rem" onclick="show('home')">← Menu</button>
+        </div>
       </div>
       <div class="found-banner" id="solo-found-banner"></div>
-      <div class="search-wrap" id="solo-search-wrap">
+      <div id="solo-search-wrap" class="search-wrap">
         <input type="text" id="search-input" placeholder="Cherche une idole ou un groupe…" autocomplete="off">
         <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
         <div class="dropdown" id="dropdown"></div>
@@ -225,14 +215,15 @@
       </div>
       <div class="legend">
         <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Correct</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--gray)"></div>Incorrect</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Partiel</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Incorrect</div>
         <div class="leg"><span style="font-size:0.85rem">↑↓</span><span>Plus grand / Plus petit</span></div>
       </div>
       <div class="table-wrap" id="solo-table-wrap" style="display:none">
         <table>
           <thead><tr>
             <th>Idole</th><th>Groupe</th><th>Agence</th>
-            <th>Pays</th><th>Âge</th><th>Déb.</th><th>Membres</th>
+            <th>Nationalité(s)</th><th>Naissance</th><th>Taille</th><th>Rôles</th><th>Déb.</th><th>Membres</th>
           </tr></thead>
           <tbody id="solo-tbody"></tbody>
         </table>
@@ -245,47 +236,51 @@
     </div>
   </div>
 
-  <!-- ═══════════════ MULTI GAME ═══════════════ -->
+  <!-- MULTI GAME -->
   <div id="screen-multi-game" class="screen">
-    <div class="card" style="margin-bottom:1rem">
-      <div class="game-header">
-        <span class="round-badge" id="mg-round">Round 1/5</span>
-        <span class="round-badge" id="mg-timer-label">⏱ 30s</span>
-      </div>
-      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-      <div class="found-banner" id="mg-found-banner"></div>
-      <div id="mg-search-area">
-        <div class="search-wrap">
-          <input type="text" id="mg-search" placeholder="Cherche une idole…" autocomplete="off">
-          <div class="dropdown" id="mg-dropdown"></div>
+    <div class="mg-layout">
+      <div class="card">
+        <div class="game-header">
+          <span class="round-badge" id="mg-round">Round 1/5</span>
+          <span class="round-badge" id="mg-guesses">Guess 0/10</span>
+          <span class="round-badge" id="mg-timer-label">⏱ 10s</span>
         </div>
-        <div class="flex" style="margin-bottom:1rem">
-          <button class="btn btn-pink" id="mg-guess-btn" onclick="multiGuess()" disabled>Deviner</button>
+        <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+        <div class="found-indicators" id="found-indicators"></div>
+        <div class="found-banner" id="mg-found-banner"></div>
+        <div id="mg-search-area">
+          <div class="search-wrap">
+            <input type="text" id="mg-search" placeholder="Cherche une idole…" autocomplete="off">
+            <div class="dropdown" id="mg-dropdown"></div>
+          </div>
+          <div class="flex" style="margin-bottom:1rem">
+            <button class="btn btn-pink" id="mg-guess-btn" onclick="multiGuess()" disabled>Deviner</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Correct</div>
+          <div class="leg"><div class="leg-dot" style="background:var(--amber)"></div>Partiel</div>
+          <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Incorrect</div>
+        </div>
+        <div class="table-wrap" id="mg-table-wrap" style="display:none">
+          <table>
+            <thead><tr>
+              <th>Idole</th><th>Groupe</th><th>Agence</th>
+              <th>Nat.</th><th>Naissance</th><th>Taille</th><th>Rôles</th><th>Déb.</th><th>Membres</th>
+            </tr></thead>
+            <tbody id="mg-tbody"></tbody>
+          </table>
         </div>
       </div>
-      <div class="legend">
-        <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Correct</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--gray)"></div>Incorrect</div>
-        <div class="leg"><span style="font-size:0.85rem">↑↓</span><span>Direction</span></div>
+      <!-- Live leaderboard sidebar -->
+      <div class="card" style="position:sticky;top:1rem">
+        <p class="section-title">Classement</p>
+        <div class="leaderboard" id="mg-live-lb"></div>
       </div>
-      <div class="table-wrap" id="mg-table-wrap" style="display:none">
-        <table>
-          <thead><tr>
-            <th>Idole</th><th>Groupe</th><th>Agence</th>
-            <th>Pays</th><th>Âge</th><th>Déb.</th><th>Membres</th>
-          </tr></thead>
-          <tbody id="mg-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-    <!-- mini leaderboard live -->
-    <div class="card">
-      <p class="section-title">Classement en direct</p>
-      <div class="leaderboard" id="mg-live-lb"></div>
     </div>
   </div>
 
-  <!-- ═══════════════ ROUND RESULTS ═══════════════ -->
+  <!-- RESULTS -->
   <div id="screen-results" class="screen">
     <div class="card">
       <div class="answer-card" id="result-answer"></div>
@@ -295,443 +290,452 @@
       <div class="flex" id="result-actions" style="justify-content:flex-end"></div>
     </div>
   </div>
-
-</div><!-- #app -->
+</div>
 
 <div id="toast"></div>
 
 <script>
 // ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const WS_URL = "wss://kpopguessr.onrender.com/ws";
+
+// ═══════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════
 const IDOLS = [
-  {name:"Jennie",group:"BLACKPINK",agency:"YG",country:"KR",age:28,debut:2016,members:4,color:"#D4537E"},
-  {name:"Jisoo",group:"BLACKPINK",agency:"YG",country:"KR",age:29,debut:2016,members:4,color:"#D4537E"},
-  {name:"Rosé",group:"BLACKPINK",agency:"YG",country:"NZ",age:27,debut:2016,members:4,color:"#D4537E"},
-  {name:"Lisa",group:"BLACKPINK",agency:"YG",country:"TH",age:27,debut:2016,members:4,color:"#D4537E"},
-  {name:"Nayeon",group:"TWICE",agency:"JYP",country:"KR",age:30,debut:2015,members:9,color:"#378ADD"},
-  {name:"Jeongyeon",group:"TWICE",agency:"JYP",country:"KR",age:29,debut:2015,members:9,color:"#378ADD"},
-  {name:"Momo",group:"TWICE",agency:"JYP",country:"JP",age:29,debut:2015,members:9,color:"#378ADD"},
-  {name:"Sana",group:"TWICE",agency:"JYP",country:"JP",age:29,debut:2015,members:9,color:"#378ADD"},
-  {name:"Jihyo",group:"TWICE",agency:"JYP",country:"KR",age:28,debut:2015,members:9,color:"#378ADD"},
-  {name:"Mina",group:"TWICE",agency:"JYP",country:"JP",age:28,debut:2015,members:9,color:"#378ADD"},
-  {name:"Dahyun",group:"TWICE",agency:"JYP",country:"KR",age:27,debut:2015,members:9,color:"#378ADD"},
-  {name:"Chaeyoung",group:"TWICE",agency:"JYP",country:"KR",age:26,debut:2015,members:9,color:"#378ADD"},
-  {name:"Tzuyu",group:"TWICE",agency:"JYP",country:"TW",age:25,debut:2015,members:9,color:"#378ADD"},
-  {name:"Irene",group:"Red Velvet",agency:"SM",country:"KR",age:31,debut:2014,members:5,color:"#E24B4A"},
-  {name:"Seulgi",group:"Red Velvet",agency:"SM",country:"KR",age:30,debut:2014,members:5,color:"#E24B4A"},
-  {name:"Wendy",group:"Red Velvet",agency:"SM",country:"KR",age:30,debut:2014,members:5,color:"#E24B4A"},
-  {name:"Joy",group:"Red Velvet",agency:"SM",country:"KR",age:28,debut:2014,members:5,color:"#E24B4A"},
-  {name:"Yeri",group:"Red Velvet",agency:"SM",country:"KR",age:25,debut:2015,members:5,color:"#E24B4A"},
-  {name:"Winter",group:"aespa",agency:"SM",country:"KR",age:24,debut:2020,members:4,color:"#7F77DD"},
-  {name:"Karina",group:"aespa",agency:"SM",country:"KR",age:24,debut:2020,members:4,color:"#7F77DD"},
-  {name:"Giselle",group:"aespa",agency:"SM",country:"JP",age:24,debut:2020,members:4,color:"#7F77DD"},
-  {name:"Ningning",group:"aespa",agency:"SM",country:"CN",age:22,debut:2020,members:4,color:"#7F77DD"},
-  {name:"Minji",group:"NewJeans",agency:"ADOR",country:"KR",age:20,debut:2022,members:5,color:"#1D9E75"},
-  {name:"Hanni",group:"NewJeans",agency:"ADOR",country:"AU",age:20,debut:2022,members:5,color:"#1D9E75"},
-  {name:"Danielle",group:"NewJeans",agency:"ADOR",country:"AU",age:20,debut:2022,members:5,color:"#1D9E75"},
-  {name:"Haerin",group:"NewJeans",agency:"ADOR",country:"KR",age:19,debut:2022,members:5,color:"#1D9E75"},
-  {name:"Hyein",group:"NewJeans",agency:"ADOR",country:"KR",age:17,debut:2022,members:5,color:"#1D9E75"},
-  {name:"Wonyoung",group:"IVE",agency:"Starship",country:"KR",age:21,debut:2021,members:6,color:"#F0997B"},
-  {name:"Yujin",group:"IVE",agency:"Starship",country:"KR",age:21,debut:2021,members:6,color:"#F0997B"},
-  {name:"Gaeul",group:"IVE",agency:"Starship",country:"KR",age:23,debut:2021,members:6,color:"#F0997B"},
-  {name:"Rei",group:"IVE",agency:"Starship",country:"JP",age:20,debut:2021,members:6,color:"#F0997B"},
-  {name:"Liz",group:"IVE",agency:"Starship",country:"KR",age:21,debut:2021,members:6,color:"#F0997B"},
-  {name:"Leeseo",group:"IVE",agency:"Starship",country:"KR",age:19,debut:2021,members:6,color:"#F0997B"},
-  {name:"Sakura",group:"LE SSERAFIM",agency:"HYBE",country:"JP",age:27,debut:2022,members:5,color:"#BA7517"},
-  {name:"Chaewon",group:"LE SSERAFIM",agency:"HYBE",country:"KR",age:24,debut:2022,members:5,color:"#BA7517"},
-  {name:"Yunjin",group:"LE SSERAFIM",agency:"HYBE",country:"KR",age:24,debut:2022,members:5,color:"#BA7517"},
-  {name:"Kazuha",group:"LE SSERAFIM",agency:"HYBE",country:"JP",age:22,debut:2022,members:5,color:"#BA7517"},
-  {name:"Eunchae",group:"LE SSERAFIM",agency:"HYBE",country:"KR",age:19,debut:2022,members:5,color:"#BA7517"},
-  {name:"Sullyoon",group:"NMIXX",agency:"JYP",country:"KR",age:22,debut:2022,members:7,color:"#534AB7"},
-  {name:"Bae",group:"NMIXX",agency:"JYP",country:"KR",age:22,debut:2022,members:7,color:"#534AB7"},
-  {name:"Haewon",group:"NMIXX",agency:"JYP",country:"KR",age:23,debut:2022,members:7,color:"#534AB7"},
-  {name:"Lily",group:"NMIXX",agency:"JYP",country:"AU",age:22,debut:2022,members:7,color:"#534AB7"},
-  {name:"Kyujin",group:"NMIXX",agency:"JYP",country:"KR",age:20,debut:2022,members:7,color:"#534AB7"},
-  {name:"Jinni",group:"NMIXX",agency:"JYP",country:"KR",age:22,debut:2022,members:7,color:"#534AB7"},
-  {name:"Jiwoo",group:"NMIXX",agency:"JYP",country:"KR",age:24,debut:2022,members:7,color:"#534AB7"},
-  {name:"Yeji",group:"ITZY",agency:"JYP",country:"KR",age:25,debut:2019,members:5,color:"#D85A30"},
-  {name:"Lia",group:"ITZY",agency:"JYP",country:"KR",age:24,debut:2019,members:5,color:"#D85A30"},
-  {name:"Ryujin",group:"ITZY",agency:"JYP",country:"KR",age:24,debut:2019,members:5,color:"#D85A30"},
-  {name:"Chaeryeong",group:"ITZY",agency:"JYP",country:"KR",age:24,debut:2019,members:5,color:"#D85A30"},
-  {name:"Yuna",group:"ITZY",agency:"JYP",country:"KR",age:22,debut:2019,members:5,color:"#D85A30"},
+  {name:"Jennie",group:"BLACKPINK",agency:"YG",nationalities:["KR"],dob:"16/01/1996",height:163,roles:["rapper","vocal","visual"],debut:2016,members:4,color:"#D4537E"},
+  {name:"Jisoo",group:"BLACKPINK",agency:"YG",nationalities:["KR"],dob:"03/01/1995",height:162,roles:["vocal","visual","leader"],debut:2016,members:4,color:"#D4537E"},
+  {name:"Rosé",group:"BLACKPINK",agency:"YG",nationalities:["NZ","AU"],dob:"11/02/1997",height:168,roles:["vocal","dancer"],debut:2016,members:4,color:"#D4537E"},
+  {name:"Lisa",group:"BLACKPINK",agency:"YG",nationalities:["TH"],dob:"27/03/1997",height:166,roles:["rapper","dancer","visual","leader"],debut:2016,members:4,color:"#D4537E"},
+  {name:"Nayeon",group:"TWICE",agency:"JYP",nationalities:["KR"],dob:"22/09/1995",height:163,roles:["vocal","visual"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Jeongyeon",group:"TWICE",agency:"JYP",nationalities:["KR"],dob:"01/11/1996",height:167,roles:["vocal"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Momo",group:"TWICE",agency:"JYP",nationalities:["JP"],dob:"09/11/1996",height:163,roles:["dancer","rapper"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Sana",group:"TWICE",agency:"JYP",nationalities:["JP"],dob:"29/12/1996",height:163,roles:["vocal","visual"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Jihyo",group:"TWICE",agency:"JYP",nationalities:["KR"],dob:"01/02/1997",height:160,roles:["vocal","leader"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Mina",group:"TWICE",agency:"JYP",nationalities:["JP","US"],dob:"24/03/1997",height:163,roles:["dancer","vocal","visual"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Dahyun",group:"TWICE",agency:"JYP",nationalities:["KR"],dob:"28/05/1998",height:159,roles:["rapper","vocal"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Chaeyoung",group:"TWICE",agency:"JYP",nationalities:["KR"],dob:"23/04/1999",height:158,roles:["rapper","vocal"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Tzuyu",group:"TWICE",agency:"JYP",nationalities:["TW"],dob:"14/06/1999",height:172,roles:["dancer","visual"],debut:2015,members:9,color:"#378ADD"},
+  {name:"Irene",group:"Red Velvet",agency:"SM",nationalities:["KR"],dob:"29/03/1991",height:158,roles:["vocal","visual","leader"],debut:2014,members:5,color:"#E24B4A"},
+  {name:"Seulgi",group:"Red Velvet",agency:"SM",nationalities:["KR"],dob:"10/02/1994",height:160,roles:["vocal","dancer","visual"],debut:2014,members:5,color:"#E24B4A"},
+  {name:"Wendy",group:"Red Velvet",agency:"SM",nationalities:["KR","CA"],dob:"21/02/1994",height:156,roles:["vocal"],debut:2014,members:5,color:"#E24B4A"},
+  {name:"Joy",group:"Red Velvet",agency:"SM",nationalities:["KR"],dob:"03/09/1996",height:168,roles:["vocal","visual"],debut:2014,members:5,color:"#E24B4A"},
+  {name:"Yeri",group:"Red Velvet",agency:"SM",nationalities:["KR"],dob:"05/03/1999",height:162,roles:["vocal","rapper","visual"],debut:2015,members:5,color:"#E24B4A"},
+  {name:"Winter",group:"aespa",agency:"SM",nationalities:["KR"],dob:"01/01/2001",height:163,roles:["vocal","dancer","visual"],debut:2020,members:4,color:"#7F77DD"},
+  {name:"Karina",group:"aespa",agency:"SM",nationalities:["KR"],dob:"11/04/2000",height:168,roles:["dancer","rapper","visual","leader"],debut:2020,members:4,color:"#7F77DD"},
+  {name:"Giselle",group:"aespa",agency:"SM",nationalities:["JP"],dob:"30/10/2000",height:163,roles:["rapper","vocal"],debut:2020,members:4,color:"#7F77DD"},
+  {name:"Ningning",group:"aespa",agency:"SM",nationalities:["CN"],dob:"23/10/2002",height:163,roles:["vocal"],debut:2020,members:4,color:"#7F77DD"},
+  {name:"Minji",group:"NewJeans",agency:"ADOR",nationalities:["KR"],dob:"07/05/2004",height:171,roles:["vocal","visual","leader"],debut:2022,members:5,color:"#1D9E75"},
+  {name:"Hanni",group:"NewJeans",agency:"ADOR",nationalities:["AU","VN"],dob:"06/10/2004",height:163,roles:["vocal","dancer","visual"],debut:2022,members:5,color:"#1D9E75"},
+  {name:"Danielle",group:"NewJeans",agency:"ADOR",nationalities:["AU","KR"],dob:"11/04/2005",height:165,roles:["vocal","visual"],debut:2022,members:5,color:"#1D9E75"},
+  {name:"Haerin",group:"NewJeans",agency:"ADOR",nationalities:["KR"],dob:"15/05/2006",height:163,roles:["vocal","visual"],debut:2022,members:5,color:"#1D9E75"},
+  {name:"Hyein",group:"NewJeans",agency:"ADOR",nationalities:["KR"],dob:"21/04/2008",height:166,roles:["dancer","visual","rapper"],debut:2022,members:5,color:"#1D9E75"},
+  {name:"Wonyoung",group:"IVE",agency:"Starship",nationalities:["KR"],dob:"31/08/2004",height:173,roles:["vocal","visual","leader"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Yujin",group:"IVE",agency:"Starship",nationalities:["KR"],dob:"17/09/2003",height:170,roles:["vocal","dancer"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Gaeul",group:"IVE",agency:"Starship",nationalities:["KR"],dob:"24/09/2002",height:166,roles:["vocal","rapper"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Rei",group:"IVE",agency:"Starship",nationalities:["JP"],dob:"03/02/2004",height:163,roles:["dancer","rapper","visual"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Liz",group:"IVE",agency:"Starship",nationalities:["KR"],dob:"21/11/2003",height:165,roles:["vocal"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Leeseo",group:"IVE",agency:"Starship",nationalities:["KR"],dob:"21/02/2007",height:163,roles:["dancer","visual"],debut:2021,members:6,color:"#F0997B"},
+  {name:"Sakura",group:"LE SSERAFIM",agency:"HYBE",nationalities:["JP"],dob:"19/03/1998",height:164,roles:["dancer","visual"],debut:2022,members:5,color:"#BA7517"},
+  {name:"Chaewon",group:"LE SSERAFIM",agency:"HYBE",nationalities:["KR"],dob:"08/08/2000",height:158,roles:["vocal","leader"],debut:2022,members:5,color:"#BA7517"},
+  {name:"Yunjin",group:"LE SSERAFIM",agency:"HYBE",nationalities:["KR","US"],dob:"08/10/2001",height:168,roles:["vocal"],debut:2022,members:5,color:"#BA7517"},
+  {name:"Kazuha",group:"LE SSERAFIM",agency:"HYBE",nationalities:["JP"],dob:"31/08/2003",height:169,roles:["dancer","visual"],debut:2022,members:5,color:"#BA7517"},
+  {name:"Eunchae",group:"LE SSERAFIM",agency:"HYBE",nationalities:["KR"],dob:"02/12/2006",height:172,roles:["dancer","visual","rapper"],debut:2022,members:5,color:"#BA7517"},
+  {name:"Sullyoon",group:"NMIXX",agency:"JYP",nationalities:["KR"],dob:"28/12/2003",height:170,roles:["vocal","visual"],debut:2022,members:6,color:"#534AB7"},
+  {name:"Bae",group:"NMIXX",agency:"JYP",nationalities:["KR","US"],dob:"22/11/2002",height:163,roles:["vocal","rapper"],debut:2022,members:6,color:"#534AB7"},
+  {name:"Haewon",group:"NMIXX",agency:"JYP",nationalities:["KR"],dob:"25/07/2001",height:163,roles:["vocal","leader"],debut:2022,members:6,color:"#534AB7"},
+  {name:"Lily",group:"NMIXX",agency:"JYP",nationalities:["AU"],dob:"26/09/2002",height:165,roles:["vocal"],debut:2022,members:6,color:"#534AB7"},
+  {name:"Kyujin",group:"NMIXX",agency:"JYP",nationalities:["KR"],dob:"24/11/2005",height:165,roles:["dancer","rapper","visual"],debut:2022,members:6,color:"#534AB7"},
+  {name:"Yeji",group:"ITZY",agency:"JYP",nationalities:["KR"],dob:"26/05/2000",height:165,roles:["dancer","rapper","visual","leader"],debut:2019,members:5,color:"#D85A30"},
+  {name:"Lia",group:"ITZY",agency:"JYP",nationalities:["KR","US"],dob:"21/07/2000",height:163,roles:["vocal"],debut:2019,members:5,color:"#D85A30"},
+  {name:"Ryujin",group:"ITZY",agency:"JYP",nationalities:["KR"],dob:"17/04/2001",height:163,roles:["dancer","rapper","visual"],debut:2019,members:5,color:"#D85A30"},
+  {name:"Chaeryeong",group:"ITZY",agency:"JYP",nationalities:["KR"],dob:"05/06/2001",height:168,roles:["dancer","vocal"],debut:2019,members:5,color:"#D85A30"},
+  {name:"Yuna",group:"ITZY",agency:"JYP",nationalities:["KR"],dob:"09/12/2003",height:170,roles:["dancer","visual","rapper"],debut:2019,members:5,color:"#D85A30"},
 ];
-const FLAGS = {KR:"🇰🇷",JP:"🇯🇵",TH:"🇹🇭",CN:"🇨🇳",TW:"🇹🇼",AU:"🇦🇺",NZ:"🇳🇿"};
-
-// ═══════════════════════════════════════════════════
-// CONFIG — CHANGE THIS AFTER DEPLOYING THE BACKEND
-// ═══════════════════════════════════════════════════
-const WS_URL = "wss://kpopguessr.onrender.com/ws";
-// Replace with your Railway URL after deployment, e.g.:
-// const WS_URL = "wss://kgirl-guessr-production.up.railway.app/ws";
+const FLAGS={KR:"🇰🇷",JP:"🇯🇵",TH:"🇹🇭",CN:"🇨🇳",TW:"🇹🇼",AU:"🇦🇺",NZ:"🇳🇿",US:"🇺🇸",CA:"🇨🇦",VN:"🇻🇳"};
 
 // ═══════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════
-function show(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + screen).classList.add('active');
-}
-function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
-function toast(msg, dur=2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
-}
+function show(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById('screen-'+s).classList.add('active')}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
+function dobYear(dob){return parseInt(dob.split('/')[2])}
+function formatNats(nats){return nats.map(n=>FLAGS[n]||n).join('')}
 
 // ═══════════════════════════════════════════════════
-// SEARCH / DROPDOWN (shared)
+// COMPARE (client-side for solo)
 // ═══════════════════════════════════════════════════
-let selectedIdol = null;
-
-function setupSearch(inputId, dropdownId, onSelect) {
-  const input = document.getElementById(inputId);
-  const dd = document.getElementById(dropdownId);
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
-    selectedIdol = null;
-    if (inputId === 'search-input') {
-      document.getElementById('search-clear').style.display = q ? 'block' : 'none';
-      document.getElementById('guess-btn').disabled = true;
-    } else {
-      document.getElementById('mg-guess-btn').disabled = true;
-    }
-    if (!q) { dd.style.display = 'none'; return; }
-    const already = new Set((inputId === 'search-input' ? soloGuesses : mgGuesses).map(g => g.name));
-    const matches = IDOLS.filter(i => !already.has(i.name) &&
-      (i.name.toLowerCase().includes(q) || i.group.toLowerCase().includes(q))).slice(0,8);
-    if (!matches.length) { dd.style.display = 'none'; return; }
-    dd.innerHTML = matches.map(idol => `
-      <div class="dd-item" onclick="selectIdol('${idol.name}','${inputId}','${dropdownId}')">
-        <div class="avatar" style="background:${idol.color}22;color:${idol.color};width:28px;height:28px;font-size:0.72rem">${initials(idol.name)}</div>
-        <span>${idol.name}</span>
-        <span class="dd-group">${idol.group}</span>
-      </div>`).join('');
-    dd.style.display = 'block';
-  });
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.search-wrap')) dd.style.display = 'none';
-  });
-}
-
-function selectIdol(name, inputId, dropdownId) {
-  selectedIdol = IDOLS.find(i => i.name === name);
-  document.getElementById(inputId).value = name;
-  document.getElementById(dropdownId).style.display = 'none';
-  if (inputId === 'search-input') {
-    document.getElementById('guess-btn').disabled = false;
-    document.getElementById('search-clear').style.display = 'block';
-  } else {
-    document.getElementById('mg-guess-btn').disabled = false;
+function compareLocally(guess,target){
+  function num(g,t){return g===t?'correct':g>t?'high':'low'}
+  function dobCmp(g,t){
+    if(g===t)return 'correct';
+    const gy=dobYear(g),ty=dobYear(t);
+    if(gy===ty)return 'partial';
+    return gy>ty?'high':'low';
   }
-}
-
-function clearSearch() {
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-clear').style.display = 'none';
-  document.getElementById('guess-btn').disabled = true;
-  document.getElementById('dropdown').style.display = 'none';
-  selectedIdol = null;
+  function natCmp(g,t){
+    const gs=new Set(g),ts=new Set(t);
+    if(JSON.stringify([...gs].sort())===JSON.stringify([...ts].sort()))return{result:'correct',matching:[...gs]};
+    const inter=[...gs].filter(x=>ts.has(x));
+    if(inter.length)return{result:'partial',matching:inter};
+    return{result:'wrong',matching:[]};
+  }
+  function rolesCmp(g,t){
+    const gs=new Set(g),ts=new Set(t);
+    if(JSON.stringify([...gs].sort())===JSON.stringify([...ts].sort()))return{result:'correct',matching:[...gs]};
+    const inter=[...gs].filter(x=>ts.has(x));
+    if(inter.length)return{result:'partial',matching:inter};
+    return{result:'wrong',matching:[]};
+  }
+  function heightCmp(g,t){
+    if(g===t)return 'correct';
+    if(Math.abs(g-t)<=2)return 'partial';
+    return g>t?'high':'low';
+  }
+  return{
+    name:guess.name,
+    group:{value:guess.group,result:guess.group===target.group?'correct':'wrong'},
+    agency:{value:guess.agency,result:guess.agency===target.agency?'correct':'wrong'},
+    nationalities:{value:guess.nationalities,...natCmp(guess.nationalities,target.nationalities)},
+    dob:{value:guess.dob,result:dobCmp(guess.dob,target.dob)},
+    height:{value:guess.height,result:heightCmp(guess.height,target.height)},
+    roles:{value:guess.roles,...rolesCmp(guess.roles,target.roles)},
+    debut:{value:guess.debut,result:num(guess.debut,target.debut)},
+    members:{value:guess.members,result:num(guess.members,target.members)},
+    correct:guess.name===target.name,
+  };
 }
 
 // ═══════════════════════════════════════════════════
-// GUESS TABLE RENDERING
+// RENDER ROW
 // ═══════════════════════════════════════════════════
-function renderRow(result, tbodyId) {
-  const tbody = document.getElementById(tbodyId);
-  const idol = IDOLS.find(i => i.name === result.name) || {};
-  const color = idol.color || '#888780';
+function renderRow(result,tbodyId){
+  const tbody=document.getElementById(tbodyId);
+  const idol=IDOLS.find(i=>i.name===result.name)||{};
+  const color=idol.color||'#888780';
 
-  function cell(field) {
-    const f = result[field];
-    const cls = f.result === 'correct' ? 'c-correct' : 'c-wrong';
-    const dir = f.result === 'high' ? ' hint-down' : f.result === 'low' ? ' hint-up' : '';
-    return `<td class="${cls}${dir}">${f.value}</td>`;
-  }
-  function flagCell() {
-    const f = result.country;
-    const cls = f.result === 'correct' ? 'c-correct' : 'c-wrong';
-    return `<td class="${cls}">${FLAGS[f.value]||f.value}</td>`;
+  function cls(r){return r==='correct'?'c-correct':r==='partial'?'c-partial':'c-wrong'}
+  function dirSuffix(r){return r==='high'?' hint-down':r==='low'?' hint-up':''}
+
+  // nationalities cell
+  const natR=result.nationalities;
+  const natDisplay=formatNats(natR.value);
+  const natCell=`<td class="${cls(natR.result)}">${natDisplay}</td>`;
+
+  // dob cell
+  const dobR=result.dob;
+  const dobCell=`<td class="${cls(dobR.result)}${dirSuffix(dobR.result)}">${dobR.value}</td>`;
+
+  // height cell
+  const htR=result.height;
+  const htCell=`<td class="${cls(htR.result)}${dirSuffix(htR.result)}">${htR.value}cm</td>`;
+
+  // roles cell
+  const rolesR=result.roles;
+  const rolesDisplay=rolesR.value.join(', ');
+  const matchingDisplay=rolesR.matching&&rolesR.matching.length&&rolesR.result!=='correct'
+    ?`<span class="roles-matching">✓ ${rolesR.matching.join(', ')}</span>`:'';
+  const rolesCell=`<td class="${cls(rolesR.result)}">${rolesDisplay}${matchingDisplay}</td>`;
+
+  function simpleCell(f){
+    const r=result[f];
+    return`<td class="${cls(r.result)}${dirSuffix(r.result)}">${r.value}</td>`;
   }
 
-  const tr = document.createElement('tr');
-  tr.className = 'grow';
-  tr.innerHTML = `
+  const tr=document.createElement('tr');
+  tr.className='grow';
+  tr.innerHTML=`
     <td style="background:var(--bg2)">
       <div class="c-name-cell">
         <div class="avatar" style="background:${color}22;color:${color};width:28px;height:28px;font-size:0.72rem">${initials(result.name)}</div>
-        <span style="font-size:0.85rem;font-weight:600">${result.name}</span>
+        <span style="font-size:0.82rem;font-weight:600">${result.name}</span>
       </div>
     </td>
-    ${cell('group')}${cell('agency')}${flagCell()}${cell('age')}${cell('debut')}${cell('members')}`;
-
-  tbody.insertBefore(tr, tbody.firstChild);
+    ${simpleCell('group')}${simpleCell('agency')}${natCell}${dobCell}${htCell}${rolesCell}${simpleCell('debut')}${simpleCell('members')}`;
+  tbody.insertBefore(tr,tbody.firstChild);
 }
 
 // ═══════════════════════════════════════════════════
-// SOLO MODE
+// SEARCH
 // ═══════════════════════════════════════════════════
-let soloTarget = null, soloGuesses = [], soloWon = false;
-let soloStats = JSON.parse(localStorage.getItem('kgg-stats') || '{"wins":0,"played":0,"totalGuesses":0}');
-
-function goSolo() { show('solo'); newSoloGame(); }
-
-function newSoloGame() {
-  soloTarget = IDOLS[Math.floor(Math.random() * IDOLS.length)];
-  soloGuesses = []; soloWon = false;
-  document.getElementById('solo-tbody').innerHTML = '';
-  document.getElementById('solo-table-wrap').style.display = 'none';
-  document.getElementById('solo-found-banner').style.display = 'none';
-  document.getElementById('solo-attempt').textContent = 'Essai 1';
-  document.getElementById('solo-search-wrap').style.display = 'block';
-  clearSearch();
-  updateSoloStats();
+let selectedIdol=null;
+function setupSearch(inputId,dropdownId,getAlready){
+  const input=document.getElementById(inputId);
+  const dd=document.getElementById(dropdownId);
+  input.addEventListener('input',()=>{
+    const q=input.value.trim().toLowerCase();
+    selectedIdol=null;
+    if(inputId==='search-input'){document.getElementById('search-clear').style.display=q?'block':'none';document.getElementById('guess-btn').disabled=true}
+    else document.getElementById('mg-guess-btn').disabled=true;
+    if(!q){dd.style.display='none';return}
+    const already=new Set(getAlready());
+    const matches=IDOLS.filter(i=>!already.has(i.name)&&(i.name.toLowerCase().includes(q)||i.group.toLowerCase().includes(q))).slice(0,8);
+    if(!matches.length){dd.style.display='none';return}
+    dd.innerHTML=matches.map(i=>`
+      <div class="dd-item" onclick="selectIdol('${i.name}','${inputId}','${dropdownId}')">
+        <div class="avatar" style="background:${i.color}22;color:${i.color};width:28px;height:28px;font-size:0.72rem">${initials(i.name)}</div>
+        <span>${i.name}</span>
+        <span class="dd-group">${i.group}</span>
+      </div>`).join('');
+    dd.style.display='block';
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))dd.style.display='none'});
+}
+function selectIdol(name,inputId,dropdownId){
+  selectedIdol=IDOLS.find(i=>i.name===name);
+  document.getElementById(inputId).value=name;
+  document.getElementById(dropdownId).style.display='none';
+  if(inputId==='search-input'){document.getElementById('guess-btn').disabled=false;document.getElementById('search-clear').style.display='block'}
+  else document.getElementById('mg-guess-btn').disabled=false;
+}
+function clearSearch(){
+  document.getElementById('search-input').value='';
+  document.getElementById('search-clear').style.display='none';
+  document.getElementById('guess-btn').disabled=true;
+  document.getElementById('dropdown').style.display='none';
+  selectedIdol=null;
 }
 
-function updateSoloStats() {
-  document.getElementById('solo-stat-wins').textContent = soloStats.wins;
-  document.getElementById('solo-stat-played').textContent = soloStats.played;
-  const avg = soloStats.wins > 0 ? (soloStats.totalGuesses / soloStats.wins).toFixed(1) : '-';
-  document.getElementById('solo-stat-avg').textContent = avg;
-}
+// ═══════════════════════════════════════════════════
+// SOLO
+// ═══════════════════════════════════════════════════
+let soloTarget=null,soloGuesses=[],soloWon=false;
+let soloStats=JSON.parse(localStorage.getItem('kgg-stats')||'{"wins":0,"played":0,"totalGuesses":0}');
 
-function soloGuess() {
-  if (!selectedIdol || soloWon) return;
-  const g = selectedIdol;
+function goSolo(){show('solo');newSoloGame()}
+function newSoloGame(){
+  soloTarget=IDOLS[Math.floor(Math.random()*IDOLS.length)];
+  soloGuesses=[];soloWon=false;
+  document.getElementById('solo-tbody').innerHTML='';
+  document.getElementById('solo-table-wrap').style.display='none';
+  document.getElementById('solo-found-banner').style.display='none';
+  document.getElementById('solo-attempt').textContent='Essai 1';
+  document.getElementById('solo-search-wrap').style.display='block';
+  document.getElementById('guess-btn').style.display='inline-flex';
+  clearSearch();updateSoloStats();
+}
+function updateSoloStats(){
+  document.getElementById('solo-stat-wins').textContent=soloStats.wins;
+  document.getElementById('solo-stat-played').textContent=soloStats.played;
+  document.getElementById('solo-stat-avg').textContent=soloStats.wins>0?(soloStats.totalGuesses/soloStats.wins).toFixed(1):'-';
+}
+function soloGuess(){
+  if(!selectedIdol||soloWon)return;
+  const g=selectedIdol;
   soloGuesses.push(g);
-
-  const result = compareLocally(g, soloTarget);
-  document.getElementById('solo-table-wrap').style.display = 'block';
-  renderRow(result, 'solo-tbody');
-
-  if (result.correct) {
-    soloWon = true;
-    soloStats.wins++; soloStats.played++; soloStats.totalGuesses += soloGuesses.length;
-    localStorage.setItem('kgg-stats', JSON.stringify(soloStats));
+  const result=compareLocally(g,soloTarget);
+  document.getElementById('solo-table-wrap').style.display='block';
+  renderRow(result,'solo-tbody');
+  if(result.correct){
+    soloWon=true;
+    soloStats.wins++;soloStats.played++;soloStats.totalGuesses+=soloGuesses.length;
+    localStorage.setItem('kgg-stats',JSON.stringify(soloStats));
     updateSoloStats();
-    const banner = document.getElementById('solo-found-banner');
-    banner.style.display = 'block';
-    const n = soloGuesses.length;
-    banner.textContent = `🎉 C'était ${soloTarget.name} de ${soloTarget.group} — trouvé en ${n} essai${n>1?'s':''}!`;
-    document.getElementById('solo-search-wrap').style.display = 'none';
-    document.getElementById('guess-btn').style.display = 'none';
+    const b=document.getElementById('solo-found-banner');
+    b.style.display='block';
+    b.textContent=`🎉 C'était ${soloTarget.name} de ${soloTarget.group} — trouvé en ${soloGuesses.length} essai${soloGuesses.length>1?'s':''}!`;
+    document.getElementById('solo-search-wrap').style.display='none';
+    document.getElementById('guess-btn').style.display='none';
     return;
   }
-
-  document.getElementById('solo-attempt').textContent = `Essai ${soloGuesses.length + 1}`;
+  document.getElementById('solo-attempt').textContent=`Essai ${soloGuesses.length+1}`;
   clearSearch();
 }
 
-function compareLocally(guess, target) {
-  function num(g, t) { return g === t ? 'correct' : g > t ? 'high' : 'low'; }
-  return {
-    name: guess.name,
-    group:   { value: guess.group,   result: guess.group   === target.group   ? 'correct' : 'wrong' },
-    agency:  { value: guess.agency,  result: guess.agency  === target.agency  ? 'correct' : 'wrong' },
-    country: { value: guess.country, result: guess.country === target.country ? 'correct' : 'wrong' },
-    age:     { value: guess.age,     result: num(guess.age,     target.age)     },
-    debut:   { value: guess.debut,   result: num(guess.debut,   target.debut)   },
-    members: { value: guess.members, result: num(guess.members, target.members) },
-    correct: guess.name === target.name,
-  };
-}
-
 // ═══════════════════════════════════════════════════
-// MULTI MODE — WebSocket
+// MULTI
 // ═══════════════════════════════════════════════════
-let ws = null, myId = null, myName = null, roomCode = null, isHost = false;
-let mgGuesses = [], mgFound = false, timerInterval = null, timerEnd = null;
+let ws=null,myId=null,myName=null,roomCode=null,isHost=false;
+let mgGuesses=[],mgFound=false,timerInterval=null,timerDuration=10;
+let mgPlayers=[];
 
-function goMultiHome() { show('multi-home'); }
+function goMultiHome(){show('multi-home')}
 
-function connectWS(onOpen) {
-  if (ws && ws.readyState === WebSocket.OPEN) { onOpen(); return; }
-  ws = new WebSocket(WS_URL);
-  ws.onopen = onOpen;
-  ws.onmessage = e => handleMsg(JSON.parse(e.data));
-  ws.onerror = () => toast("Erreur de connexion au serveur.");
-  ws.onclose = () => {
-    document.getElementById('conn-dot').classList.remove('ok');
-    toast("Déconnecté du serveur.");
-  };
+function connectWS(onOpen){
+  if(ws&&ws.readyState===WebSocket.OPEN){onOpen();return}
+  ws=new WebSocket(WS_URL);
+  ws.onopen=onOpen;
+  ws.onmessage=e=>handleMsg(JSON.parse(e.data));
+  ws.onerror=()=>toast("Erreur de connexion au serveur.");
+  ws.onclose=()=>{document.getElementById('conn-dot').classList.remove('ok');};
+}
+function createRoom(){
+  const name=document.getElementById('create-name').value.trim();
+  if(!name){toast("Entre ton pseudo !");return}
+  myName=name;
+  connectWS(()=>ws.send(JSON.stringify({action:'create_room',name})));
+}
+function joinRoom(){
+  const name=document.getElementById('join-name').value.trim();
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if(!name){toast("Entre ton pseudo !");return}
+  if(!code||code.length!==4){toast("Code à 4 caractères.");return}
+  myName=name;
+  connectWS(()=>ws.send(JSON.stringify({action:'join_room',name,code})));
+}
+function startGame(){ws.send(JSON.stringify({action:'start_game'}))}
+function leaveRoom(){if(ws)ws.close();ws=null;myId=null;show('home')}
+function nextRound(){ws.send(JSON.stringify({action:'next_round'}))}
+
+function multiGuess(){
+  if(!selectedIdol||mgFound||!ws)return;
+  ws.send(JSON.stringify({action:'guess',name:selectedIdol.name}));
+  document.getElementById('mg-search').value='';
+  document.getElementById('mg-guess-btn').disabled=true;
+  selectedIdol=null;
 }
 
-function createRoom() {
-  const name = document.getElementById('create-name').value.trim();
-  if (!name) { toast("Entre ton pseudo !"); return; }
-  myName = name;
-  connectWS(() => ws.send(JSON.stringify({ action: 'create_room', name })));
-}
-
-function joinRoom() {
-  const name = document.getElementById('join-name').value.trim();
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (!name) { toast("Entre ton pseudo !"); return; }
-  if (!code || code.length !== 4) { toast("Entre un code à 4 caractères."); return; }
-  myName = name;
-  connectWS(() => ws.send(JSON.stringify({ action: 'join_room', name, code })));
-}
-
-function startGame() { ws.send(JSON.stringify({ action: 'start_game' })); }
-
-function leaveRoom() {
-  if (ws) ws.close();
-  ws = null; myId = null; roomCode = null; isHost = false;
-  show('home');
-}
-
-function multiGuess() {
-  if (!selectedIdol || mgFound || !ws) return;
-  ws.send(JSON.stringify({ action: 'guess', name: selectedIdol.name }));
-  document.getElementById('mg-search').value = '';
-  document.getElementById('mg-guess-btn').disabled = true;
-  selectedIdol = null;
-}
-
-function handleMsg(msg) {
-  switch(msg.type) {
-
+function handleMsg(msg){
+  switch(msg.type){
     case 'room_created':
     case 'room_joined':
-      myId = msg.player_id;
-      roomCode = msg.code;
-      document.getElementById('lobby-code').textContent = msg.code;
+      myId=msg.player_id;roomCode=msg.code;
+      document.getElementById('lobby-code').textContent=msg.code;
       document.getElementById('conn-dot').classList.add('ok');
-      show('lobby');
-      break;
+      show('lobby');break;
 
     case 'lobby_state':
-      isHost = msg.host === myId;
-      renderLobby(msg.players, msg.host);
-      break;
+      isHost=msg.host===myId;mgPlayers=msg.players;
+      renderLobby(msg.players,msg.host);break;
 
     case 'round_start':
-      mgGuesses = []; mgFound = false;
-      document.getElementById('mg-tbody').innerHTML = '';
-      document.getElementById('mg-table-wrap').style.display = 'none';
-      document.getElementById('mg-found-banner').style.display = 'none';
-      document.getElementById('mg-round').textContent = `Round ${msg.round}/${msg.total_rounds}`;
-      document.getElementById('mg-search-area').style.display = 'block';
-      document.getElementById('mg-search').value = '';
-      document.getElementById('mg-guess-btn').disabled = true;
-      document.getElementById('mg-dropdown').style.display = 'none';
-      selectedIdol = null;
+      mgGuesses=[];mgFound=false;
+      document.getElementById('mg-tbody').innerHTML='';
+      document.getElementById('mg-table-wrap').style.display='none';
+      document.getElementById('mg-found-banner').style.display='none';
+      document.getElementById('mg-round').textContent=`Round ${msg.round}/${msg.total_rounds}`;
+      document.getElementById('mg-guesses').textContent=`Guess 0/${msg.max_guesses}`;
+      document.getElementById('mg-search-area').style.display='block';
+      document.getElementById('mg-search').value='';
+      document.getElementById('mg-guess-btn').disabled=true;
+      document.getElementById('mg-dropdown').style.display='none';
+      selectedIdol=null;timerDuration=msg.timer;
+      renderFoundIndicators();
       startTimer(msg.timer);
-      show('multi-game');
-      break;
+      show('multi-game');break;
 
     case 'guess_result':
-      document.getElementById('mg-table-wrap').style.display = 'block';
-      renderRow(msg.result, 'mg-tbody');
+      document.getElementById('mg-table-wrap').style.display='block';
+      renderRow(msg.result,'mg-tbody');
       mgGuesses.push(msg.result);
-      if (msg.result.correct) {
-        mgFound = true;
-        document.getElementById('mg-search-area').style.display = 'none';
-        const b = document.getElementById('mg-found-banner');
-        b.style.display = 'block';
-        b.textContent = `✅ Trouvé en ${mgGuesses.length} essai${mgGuesses.length>1?'s':''} !`;
-      }
+      document.getElementById('mg-guesses').textContent=`Guess ${msg.guess_count}/${msg.max_guesses}`;
+      // reset timer on each guess
+      startTimer(timerDuration);
       break;
 
     case 'player_found':
-      updateLiveLb(msg);
-      if (msg.player_id !== myId) toast(`${msg.player_name} a trouvé en ${msg.guesses} essais !`);
+      updateFoundIndicator(msg.player_id,true);
+      if(msg.player_id===myId){
+        mgFound=true;
+        document.getElementById('mg-search-area').style.display='none';
+        const b=document.getElementById('mg-found-banner');
+        b.style.display='block';
+        b.textContent=`✅ Bien joué ! En attente des autres joueurs…`;
+      } else {
+        toast(`${msg.player_name} a trouvé !`);
+      }
       break;
+
+    case 'guess_timeout':
+      toast("⏱ Temps écoulé pour ce guess !");
+      startTimer(timerDuration);break;
 
     case 'round_end':
-      stopTimer();
-      showResults(msg);
-      break;
+      stopTimer();showResults(msg);break;
 
     case 'error':
-      toast(msg.msg);
-      break;
+      toast(msg.msg);break;
   }
 }
 
-function renderLobby(players, hostId) {
-  const list = document.getElementById('lobby-players');
-  list.innerHTML = players.map(p => `
+function renderLobby(players,hostId){
+  document.getElementById('lobby-players').innerHTML=players.map(p=>`
     <div class="player-item">
       <div class="avatar" style="background:var(--pink-light);color:var(--pink-dark)">${initials(p.name)}</div>
       <span>${p.name}</span>
-      ${p.id === hostId ? '<span class="crown">👑</span>' : ''}
-      ${p.id === myId ? '<span class="badge">Toi</span>' : ''}
+      ${p.id===hostId?'<span>👑</span>':''}
+      ${p.id===myId?'<span class="badge">Toi</span>':''}
       <span style="margin-left:auto;font-size:0.8rem;color:var(--text2)">${p.score} pts</span>
     </div>`).join('');
-  document.getElementById('start-btn').style.display = isHost ? 'inline-flex' : 'none';
-  document.getElementById('wait-host').style.display = isHost ? 'none' : 'block';
+  document.getElementById('start-btn').style.display=isHost?'inline-flex':'none';
+  document.getElementById('wait-host').style.display=isHost?'none':'block';
 }
 
-function updateLiveLb(msg) {
-  // just a toast; full lb comes with round_end
+function renderFoundIndicators(){
+  const players=mgPlayers;
+  document.getElementById('found-indicators').innerHTML=players.map(p=>`
+    <div class="found-pill" id="pill-${p.id}">${p.name}</div>`).join('');
+}
+function updateFoundIndicator(pid,found){
+  const el=document.getElementById('pill-'+pid);
+  if(el&&found)el.classList.add('found');
+}
+function renderLiveLb(players){
+  const sorted=[...players].sort((a,b)=>b.score-a.score);
+  const ranks=['gold','silver','bronze'];
+  document.getElementById('mg-live-lb').innerHTML=sorted.map((p,i)=>`
+    <div class="lb-item">
+      <span class="lb-rank ${ranks[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'.'}</span>
+      <div class="avatar" style="background:var(--pink-light);color:var(--pink-dark);width:28px;height:28px;font-size:0.72rem">${initials(p.name)}</div>
+      <span style="font-size:0.85rem">${p.name}${p.id===myId?' <span style="font-size:0.72rem;color:var(--text2)">(toi)</span>':''}</span>
+      <span class="lb-score">${p.score}</span>
+    </div>`).join('');
 }
 
-function startTimer(duration) {
+function startTimer(duration){
   clearInterval(timerInterval);
-  timerEnd = Date.now() + duration * 1000;
-  const bar = document.getElementById('timer-bar');
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
-  bar.style.background = 'var(--pink)';
-
-  timerInterval = setInterval(() => {
-    const left = Math.max(0, timerEnd - Date.now());
-    const pct = (left / (duration * 1000)) * 100;
-    bar.style.transition = 'width 1s linear';
-    bar.style.width = pct + '%';
-    if (pct < 25) bar.style.background = '#E24B4A';
-    else if (pct < 50) bar.style.background = '#BA7517';
-    document.getElementById('mg-timer-label').textContent = `⏱ ${Math.ceil(left/1000)}s`;
-    if (left <= 0) stopTimer();
-  }, 500);
+  const bar=document.getElementById('timer-bar');
+  bar.style.transition='none';bar.style.width='100%';bar.style.background='var(--pink)';
+  let left=duration;
+  document.getElementById('mg-timer-label').textContent=`⏱ ${left}s`;
+  timerInterval=setInterval(()=>{
+    left=Math.max(0,left-0.5);
+    const pct=(left/duration)*100;
+    bar.style.transition='width 0.5s linear';
+    bar.style.width=pct+'%';
+    if(pct<25)bar.style.background='var(--red)';
+    else if(pct<50)bar.style.background='var(--amber)';
+    document.getElementById('mg-timer-label').textContent=`⏱ ${Math.ceil(left)}s`;
+    if(left<=0)stopTimer();
+  },500);
 }
+function stopTimer(){clearInterval(timerInterval);document.getElementById('timer-bar').style.width='0%'}
 
-function stopTimer() {
-  clearInterval(timerInterval);
-  document.getElementById('timer-bar').style.width = '0%';
-}
-
-function showResults(msg) {
-  const answer = msg.answer;
-  document.getElementById('result-answer').innerHTML = `
+function showResults(msg){
+  const a=msg.answer;
+  document.getElementById('result-answer').innerHTML=`
     <h3>C'était…</h3>
-    <div class="answer-name">${answer.name}</div>
-    <div class="answer-group">${answer.group} · ${answer.agency} · ${FLAGS[answer.country]||answer.country}</div>`;
-
-  const lb = msg.leaderboard;
-  const deltas = msg.scores_this_round;
-  const ranks = ['gold','silver','bronze'];
-  document.getElementById('result-lb').innerHTML = lb.map((p,i) => `
+    <div class="answer-name">${a.name}</div>
+    <div class="answer-group">${a.group} · ${a.agency} · ${formatNats(a.nationalities)}</div>`;
+  const lb=msg.leaderboard;
+  const deltas=msg.scores_this_round;
+  const ranks=['gold','silver','bronze'];
+  document.getElementById('result-lb').innerHTML=lb.map((p,i)=>`
     <div class="lb-item">
       <span class="lb-rank ${ranks[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'.'}</span>
       <div class="avatar" style="background:var(--pink-light);color:var(--pink-dark)">${initials(p.name)}</div>
       <span>${p.name}${p.id===myId?' <span style="font-size:0.75rem;color:var(--text2)">(Toi)</span>':''}</span>
       <span class="lb-score">${p.score} pts<span class="lb-delta">+${deltas[p.id]||0}</span></span>
     </div>`).join('');
-
-  const actions = document.getElementById('result-actions');
-  if (msg.game_over) {
-    actions.innerHTML = `<button class="btn btn-pink" onclick="leaveRoom()">Retour au menu</button>`;
-  } else if (isHost) {
-    actions.innerHTML = `<button class="btn btn-pink" onclick="nextRound()">Round suivant →</button>`;
+  const actions=document.getElementById('result-actions');
+  if(msg.game_over){
+    actions.innerHTML=`<button class="btn btn-pink" onclick="leaveRoom()">Retour au menu</button>`;
+  } else if(isHost){
+    actions.innerHTML=`<button class="btn btn-pink" onclick="nextRound()">Round suivant →</button>`;
   } else {
-    actions.innerHTML = `<p style="font-size:0.85rem;color:var(--text2)">En attente de l'hôte…</p>`;
+    actions.innerHTML=`<p style="font-size:0.85rem;color:var(--text2)">En attente de l'hôte…</p>`;
   }
   show('results');
 }
 
-function nextRound() { ws.send(JSON.stringify({ action: 'next_round' })); }
-
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
-setupSearch('search-input', 'dropdown', null);
-setupSearch('mg-search', 'mg-dropdown', null);
-
-document.getElementById('join-code').addEventListener('input', function() {
-  this.value = this.value.toUpperCase();
-});
+setupSearch('search-input','dropdown',()=>soloGuesses.map(g=>g.name));
+setupSearch('mg-search','mg-dropdown',()=>mgGuesses.map(g=>g.name));
+document.getElementById('join-code').addEventListener('input',function(){this.value=this.value.toUpperCase()});
 </script>
 </body>
 </html>
