@@ -16,9 +16,56 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-GUESS_TIMER = 30  # seconds per guess
+MAX_GUESSES = 10
+GUESS_TIMER = 10  # seconds per guess turn
 
-# ── Room state ──────────────────────────────────────────────────────────────
+# ── Comparison ───────────────────────────────────────────────────────────────
+
+def compare(guess: dict, target: dict) -> dict:
+    def num_cmp(g, t):
+        if g == t: return "correct"
+        return "high" if g > t else "low"
+
+    def dob_year(dob): return int(dob.split("/")[2])
+    def dob_cmp(g, t):
+        gy, ty = dob_year(g), dob_year(t)
+        if g == t: return "correct"
+        if gy == ty: return "partial"
+        return "high" if gy > ty else "low"
+
+    def nat_cmp(g_nats, t_nats):
+        g_set, t_set = set(g_nats), set(t_nats)
+        if g_set == t_set: return {"result": "correct", "matching": list(g_set)}
+        inter = g_set & t_set
+        if inter: return {"result": "partial", "matching": list(inter)}
+        return {"result": "wrong", "matching": []}
+
+    def roles_cmp(g_roles, t_roles):
+        g_set, t_set = set(g_roles), set(t_roles)
+        if g_set == t_set: return {"result": "correct", "matching": list(g_set)}
+        inter = g_set & t_set
+        if inter: return {"result": "partial", "matching": list(inter)}
+        return {"result": "wrong", "matching": []}
+
+    def height_cmp(g, t):
+        if g == t: return "correct"
+        if abs(g - t) <= 2: return "partial"
+        return "high" if g > t else "low"
+
+    return {
+        "name": guess["name"],
+        "group":   {"value": guess["group"],   "result": "correct" if guess["group"]  == target["group"]  else "wrong"},
+        "agency":  {"value": guess["agency"],  "result": "correct" if guess["agency"] == target["agency"] else "wrong"},
+        "nationalities": {"value": guess["nationalities"], **nat_cmp(guess["nationalities"], target["nationalities"])},
+        "dob":     {"value": guess["dob"],     "result": dob_cmp(guess["dob"], target["dob"])},
+        "height":  {"value": guess["height"],  "result": height_cmp(guess["height"], target["height"])},
+        "roles":   {"value": guess["roles"],   **roles_cmp(guess["roles"], target["roles"])},
+        "debut":   {"value": guess["debut"],   "result": num_cmp(guess["debut"],  target["debut"])},
+        "members": {"value": guess["members"], "result": num_cmp(guess["members"], target["members"])},
+        "correct": guess["name"] == target["name"],
+    }
+
+# ── Room ─────────────────────────────────────────────────────────────────────
 
 class Player:
     def __init__(self, ws: WebSocket, name: str, pid: str):
@@ -26,9 +73,8 @@ class Player:
         self.name = name
         self.id = pid
         self.score = 0
-        self.guesses: list = []
         self.found = False
-        self.found_at: Optional[float] = None
+        self.guesses_this_round = 0
 
 class Room:
     def __init__(self, code: str, host_id: str):
@@ -36,11 +82,13 @@ class Room:
         self.host_id = host_id
         self.players: Dict[str, Player] = {}
         self.target: Optional[dict] = None
-        self.phase = "lobby"   # lobby | playing | results
+        self.phase = "lobby"
         self.round = 0
         self.total_rounds = 5
+        self.guess_count = 0       # total guesses this round
         self.timer_task: Optional[asyncio.Task] = None
-        self.guess_start: Optional[float] = None
+        self.round_start_time: Optional[float] = None
+        self.used_idols: list = []
 
     def to_lobby_state(self):
         return {
@@ -53,11 +101,12 @@ class Room:
         }
 
     def pick_target(self):
-        used = [g["name"] for p in self.players.values() for g in p.guesses]
-        pool = [i for i in IDOLS if i["name"] not in used]
+        pool = [i for i in IDOLS if i["name"] not in self.used_idols]
         if not pool:
+            self.used_idols = []
             pool = IDOLS
         self.target = random.choice(pool)
+        self.used_idols.append(self.target["name"])
 
     async def broadcast(self, msg: dict):
         dead = []
@@ -72,23 +121,40 @@ class Room:
     async def start_round(self):
         self.phase = "playing"
         self.pick_target()
-        self.guess_start = time.time()
+        self.guess_count = 0
+        self.round_start_time = time.time()
         for p in self.players.values():
             p.found = False
-            p.found_at = None
+            p.guesses_this_round = 0
+
         await self.broadcast({
             "type": "round_start",
             "round": self.round + 1,
             "total_rounds": self.total_rounds,
+            "max_guesses": MAX_GUESSES,
             "timer": GUESS_TIMER,
-            "idol_count": len(IDOLS),
         })
-        self.timer_task = asyncio.create_task(self.run_timer())
+        self.timer_task = asyncio.create_task(self.run_guess_timer())
 
-    async def run_timer(self):
+    async def run_guess_timer(self):
         await asyncio.sleep(GUESS_TIMER)
         if self.phase == "playing":
+            # time's up for this guess turn — broadcast timeout
+            await self.broadcast({"type": "guess_timeout", "guess_count": self.guess_count})
+            # check if round should end
+            await self.check_round_end()
+
+    async def check_round_end(self):
+        if self.phase != "playing":
+            return
+        all_found = all(p.found for p in self.players.values())
+        if all_found or self.guess_count >= MAX_GUESSES:
             await self.end_round()
+        else:
+            # next guess timer
+            if self.timer_task:
+                self.timer_task.cancel()
+            self.timer_task = asyncio.create_task(self.run_guess_timer())
 
     async def end_round(self):
         if self.phase != "playing":
@@ -100,12 +166,10 @@ class Room:
         self.round += 1
         scores_this_round = {}
         for p in self.players.values():
-            if p.found and p.found_at is not None:
-                elapsed = p.found_at - self.guess_start
-                n_guesses = len([g for g in p.guesses if g.get("round") == self.round - 1])
-                time_bonus = max(0, int((GUESS_TIMER - elapsed) * 10))
-                guess_bonus = max(0, (10 - n_guesses) * 50)
-                pts = 500 + time_bonus + guess_bonus
+            if p.found:
+                speed_bonus = max(0, int((GUESS_TIMER - (time.time() - self.round_start_time)) * 5))
+                guess_bonus = max(0, (MAX_GUESSES - p.guesses_this_round) * 50)
+                pts = 300 + speed_bonus + guess_bonus
                 p.score += pts
                 scores_this_round[p.id] = pts
             else:
@@ -123,8 +187,6 @@ class Room:
             "game_over": self.round >= self.total_rounds,
         })
 
-# ── Global rooms store ───────────────────────────────────────────────────────
-
 rooms: Dict[str, Room] = {}
 
 def make_code():
@@ -133,25 +195,7 @@ def make_code():
         if code not in rooms:
             return code
 
-# ── Guess comparison logic ────────────────────────────────────────────────────
-
-def compare(guess: dict, target: dict) -> dict:
-    def num_cmp(g, t):
-        if g == t: return "correct"
-        return "high" if g > t else "low"
-
-    return {
-        "name": guess["name"],
-        "group":    {"value": guess["group"],   "result": "correct" if guess["group"]   == target["group"]   else "wrong"},
-        "agency":   {"value": guess["agency"],  "result": "correct" if guess["agency"]  == target["agency"]  else "wrong"},
-        "country":  {"value": guess["country"], "result": "correct" if guess["country"] == target["country"] else "wrong"},
-        "age":      {"value": guess["age"],     "result": num_cmp(guess["age"],     target["age"])},
-        "debut":    {"value": guess["debut"],   "result": num_cmp(guess["debut"],   target["debut"])},
-        "members":  {"value": guess["members"], "result": num_cmp(guess["members"], target["members"])},
-        "correct": guess["name"] == target["name"],
-    }
-
-# ── WebSocket handler ────────────────────────────────────────────────────────
+# ── WebSocket ─────────────────────────────────────────────────────────────────
 
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):
@@ -163,7 +207,6 @@ async def ws_endpoint(websocket: WebSocket):
         async for raw in websocket.iter_json():
             action = raw.get("action")
 
-            # ── CREATE ROOM ──
             if action == "create_room":
                 code = make_code()
                 pid = str(uuid.uuid4())[:8]
@@ -174,7 +217,6 @@ async def ws_endpoint(websocket: WebSocket):
                 await websocket.send_json({"type": "room_created", "code": code, "player_id": pid})
                 await room.broadcast(room.to_lobby_state())
 
-            # ── JOIN ROOM ──
             elif action == "join_room":
                 code = raw["code"].upper()
                 if code not in rooms:
@@ -190,17 +232,15 @@ async def ws_endpoint(websocket: WebSocket):
                 await websocket.send_json({"type": "room_joined", "code": code, "player_id": pid})
                 await room.broadcast(room.to_lobby_state())
 
-            # ── START GAME ──
             elif action == "start_game":
                 if room and player and player.id == room.host_id and room.phase == "lobby":
-                    if len(room.players) < 1:
-                        await websocket.send_json({"type": "error", "msg": "Il faut au moins 1 joueur."})
-                        continue
                     await room.start_round()
 
-            # ── GUESS ──
             elif action == "guess":
                 if not room or not player or room.phase != "playing":
+                    continue
+                if player.found:
+                    await websocket.send_json({"type": "error", "msg": "Tu as déjà trouvé ce round !"})
                     continue
                 idol_name = raw["name"]
                 idol = next((i for i in IDOLS if i["name"] == idol_name), None)
@@ -209,32 +249,37 @@ async def ws_endpoint(websocket: WebSocket):
                     continue
 
                 result = compare(idol, room.target)
-                result["round"] = room.round
-                player.guesses.append(result)
+                player.guesses_this_round += 1
+                room.guess_count += 1
 
-                await websocket.send_json({"type": "guess_result", "result": result})
+                # broadcast to everyone so all see the guess
+                await room.broadcast({
+                    "type": "guess_result",
+                    "result": result,
+                    "player_name": player.name,
+                    "player_id": player.id,
+                    "guess_count": room.guess_count,
+                    "max_guesses": MAX_GUESSES,
+                })
 
-                if result["correct"] and not player.found:
+                if result["correct"]:
                     player.found = True
-                    player.found_at = time.time()
                     await room.broadcast({
                         "type": "player_found",
                         "player_name": player.name,
                         "player_id": player.id,
-                        "guesses": len(player.guesses),
                     })
-                    all_found = all(p.found for p in room.players.values())
-                    if all_found:
-                        await room.end_round()
 
-            # ── NEXT ROUND ──
+                # cancel current timer and check round end
+                if room.timer_task:
+                    room.timer_task.cancel()
+                await room.check_round_end()
+
             elif action == "next_round":
-                if room and player and player.id == room.host_id:
-                    if room.phase == "results" and room.round < room.total_rounds:
-                        room.phase = "lobby"
-                        await room.start_round()
+                if room and player and player.id == room.host_id and room.phase == "results":
+                    room.phase = "lobby"
+                    await room.start_round()
 
-            # ── PING ──
             elif action == "ping":
                 await websocket.send_json({"type": "pong"})
 
